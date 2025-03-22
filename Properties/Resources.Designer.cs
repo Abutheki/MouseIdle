@@ -59,5 +59,15 @@ namespace MouseIdle.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] TitleIcon {
+            get {
+                object obj = ResourceManager.GetObject("TitleIcon", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

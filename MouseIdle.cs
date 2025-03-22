@@ -1,9 +1,16 @@
+using System.Runtime.InteropServices;
 using Timer = System.Windows.Forms.Timer;
 
 namespace MouseIdle
 {
     public partial class MouseIdle : Form
     {
+        [DllImport("kernel32.dll")]
+        private static extern uint SetThreadExecutionState(uint esFlags);
+        private const uint ES_CONTINUOUS = 0x80000000;
+        private const uint ES_SYSTEM_REQUIRED = 0x00000001;
+        private const uint ES_DISPLAY_REQUIRED = 0x00000002;
+
         private NotifyIcon notifyIcon;
         private ContextMenuStrip contextMenuStrip;
         private ToolStripMenuItem exitMenuItem;
@@ -15,6 +22,7 @@ namespace MouseIdle
         private int timeCounter = 30;
         private bool isStopped = true;
         private Point lastCursor;
+        private Icon titleIcon;
 
         public MouseIdle()
         {
@@ -23,12 +31,16 @@ namespace MouseIdle
             IdleLogic();
         }
 
+        #region Window Initialization
         private void CustomComponent()
         {
-            // Init tray notify icon
+            using(MemoryStream ms = new MemoryStream(Properties.Resources.TitleIcon))
+            {
+                titleIcon = new Icon(ms);
+            }
             notifyIcon = new NotifyIcon()
             {
-                Icon = new Icon("TitleIcon.ico"),
+                Icon = titleIcon,
                 Text = "Mouse Idle",
                 Visible = true
             };
@@ -46,7 +58,9 @@ namespace MouseIdle
             // Trau notify icon double click
             notifyIcon.MouseDoubleClick += NotifyIcon_MouseDoubleClick;
         }
+        #endregion
 
+        #region Main Logic
         private void IdleLogic()
         {
             random = new Random();
@@ -102,51 +116,56 @@ namespace MouseIdle
             }
         }
 
+        private void NudInteral_ValueChange(object sender, EventArgs e)
+        {
+            timeCounter = (int)nudInterval.Value;
+        }
+
+        #endregion
+
+        #region Window Button
         private void BtnRun_Click(object sender, EventArgs e)
         {
             if (isStopped)
             {
                 isStopped = false;
                 timer.Start();
+                SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
                 btnRun.Text = "Stop";
             }
             else
             {
                 isStopped = true;
                 timer.Stop();
+                SetThreadExecutionState(ES_CONTINUOUS);
                 btnRun.Text = "Start";
             }
         }
 
-        private void NudInteral_ValueChange(object sender, EventArgs e)
+        private void BtnExit_Click(object sender, EventArgs e)
         {
-            timeCounter = (int)nudInterval.Value;
+            ExitApp();
         }
+        #endregion
 
+        #region Tray Icon
         private void NotifyIcon_MouseDoubleClick(object? sender, MouseEventArgs e)
         {
-            this.Visible = true;
-            this.WindowState = FormWindowState.Normal;
+            ShowFormWindow();
         }
 
         private void OpenMenuItem_Click(object? sender, EventArgs e)
         {
-            this.Visible = true;
-            this.WindowState = FormWindowState.Normal;
+            ShowFormWindow();
         }
 
         private void ExitMenuItem_Click(object? sender, EventArgs e)
         {
-            notifyIcon.Dispose();
-            Application.Exit();
+            ExitApp();
         }
+        #endregion
 
-        private void BtnExit_Click(object sender, EventArgs e)
-        {
-            notifyIcon.Dispose();
-            Application.Exit();
-        }
-
+        #region Base Form Event Override
         protected override void OnResize(EventArgs e)
         {
             if (this.WindowState == FormWindowState.Minimized)
@@ -158,8 +177,30 @@ namespace MouseIdle
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            SetThreadExecutionState(ES_CONTINUOUS);
             notifyIcon.Dispose();
             base.OnFormClosing(e);
         }
+        #endregion
+
+        #region All Form Activities
+        /// <summary>
+        /// Show App Window
+        /// </summary>
+        private void ShowFormWindow()
+        {
+            this.Visible = true;
+            this.WindowState = FormWindowState.Normal;
+        }
+        /// <summary>
+        /// Exit App
+        /// </summary>
+        private void ExitApp()
+        {
+            SetThreadExecutionState(ES_CONTINUOUS);
+            notifyIcon.Dispose();
+            Application.Exit();
+        }
+        #endregion
     }
 }
