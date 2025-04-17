@@ -10,8 +10,16 @@ namespace MouseIdle
         {
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
-            ApplicationConfiguration.Initialize();
-            Application.Run(new MouseIdle());
+            try
+            {
+                ApplicationConfiguration.Initialize();
+                Application.Run(new MouseIdle());
+            }
+            catch (Exception ex)
+            {
+                //MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
         }
     }
 }

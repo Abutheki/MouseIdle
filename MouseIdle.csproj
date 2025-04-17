@@ -6,10 +6,10 @@
 		<Nullable>enable</Nullable>
 		<UseWindowsForms>true</UseWindowsForms>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<ApplicationIcon>Resources\Icon\TitleIcon.ico</ApplicationIcon>
+		<!--<ApplicationIcon>Resources\Icon\TitleIcon.ico</ApplicationIcon>
 		<PublishSingleFile>true</PublishSingleFile>
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-		<DebugType>none</DebugType>
+		<DebugType>none</DebugType>-->
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,6 +28,11 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Resources.resx</DependentUpon>
 		</Compile>
+		<Compile Update="Properties\Setting.Designer.cs">
+		  <DesignTimeSharedInput>True</DesignTimeSharedInput>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Setting.settings</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -39,6 +44,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="System.Drawing.Common" Version="9.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Properties\Setting.settings">
+	    <Generator>SettingsSingleFileGenerator</Generator>
+	    <LastGenOutput>Setting.Designer.cs</LastGenOutput>
+	  </None>
 	</ItemGroup>
 
 </Project>

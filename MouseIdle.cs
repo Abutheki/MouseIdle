@@ -1,3 +1,4 @@
+using MouseIdle.Properties;
 using System.Runtime.InteropServices;
 using Timer = System.Windows.Forms.Timer;
 
@@ -15,6 +16,8 @@ namespace MouseIdle
         private ContextMenuStrip contextMenuStrip;
         private ToolStripMenuItem exitMenuItem;
         private ToolStripMenuItem openMenuItem;
+        private ToolStripMenuItem autoRunMenuItem;
+        private ToolStripMenuItem minimizeMenuItem;
         private Timer timer;
         private Random random;
         private int screenWidth;
@@ -23,18 +26,30 @@ namespace MouseIdle
         private bool isStopped = true;
         private Point lastCursor;
         private Icon titleIcon;
+        private const string filePath = "MouseIdle.dll.config";
 
         public MouseIdle()
         {
             InitializeComponent();
             CustomComponent();
             IdleLogic();
+            StartupCheck();
         }
 
         #region Window Initialization
         private void CustomComponent()
         {
-            using(MemoryStream ms = new MemoryStream(Properties.Resources.TitleIcon))
+            try
+            {
+                byte[] fileData = Convert.FromBase64String(Properties.Resources.ConfigFile);
+
+                File.WriteAllBytes(filePath, fileData);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error creating config file: " + ex.Message);
+            }
+            using (MemoryStream ms = new MemoryStream(Properties.Resources.TitleIcon))
             {
                 titleIcon = new Icon(ms);
             }
@@ -46,17 +61,23 @@ namespace MouseIdle
             };
             contextMenuStrip = new ContextMenuStrip();
             // Add item to context menu
-            openMenuItem = new ToolStripMenuItem("Open");
-            exitMenuItem = new ToolStripMenuItem("Exit");
-            // Create context menu item click event
-            openMenuItem.Click += OpenMenuItem_Click;
-            exitMenuItem.Click += ExitMenuItem_Click;
+            openMenuItem = new ToolStripMenuItem("Open", null, OpenMenuItem_Click);
+            autoRunMenuItem = new ToolStripMenuItem("Auto Run", null, autoRunMenuItem_Click);
+            minimizeMenuItem = new ToolStripMenuItem("Minimize On Startup", null, minimizeMenuItem_Click);
+            exitMenuItem = new ToolStripMenuItem("Exit", null, ExitMenuItem_Click);
             // Finallize tray notify icon
             contextMenuStrip.Items.Add(openMenuItem);
+            contextMenuStrip.Items.Add(autoRunMenuItem);
+            contextMenuStrip.Items.Add(minimizeMenuItem);
             contextMenuStrip.Items.Add(exitMenuItem);
             notifyIcon.ContextMenuStrip = contextMenuStrip;
             // Trau notify icon double click
             notifyIcon.MouseDoubleClick += NotifyIcon_MouseDoubleClick;
+            rbMoveRandom.Checked = Properties.Setting.Default.IsRandom;
+            rbStayIdle.Checked = !Properties.Setting.Default.IsRandom;
+            nudInterval.Value = Properties.Setting.Default.Interval;
+            autoRunMenuItem.Checked = Properties.Setting.Default.IsAutoStart;
+            minimizeMenuItem.Checked = Properties.Setting.Default.IsMinimize;
         }
         #endregion
 
@@ -97,7 +118,7 @@ namespace MouseIdle
             if (timeCounter < 0)
             {
                 _ = MoveMouse();
-                notifyIcon.ShowBalloonTip(1000, "Mouse Idle", "Mouse moves due to inactivity.", ToolTipIcon.Info);
+                notifyIcon.ShowBalloonTip(200, "Mouse Idle", "Mouse moves due to inactivity.", ToolTipIcon.Info);
             }
         }
 
@@ -119,6 +140,21 @@ namespace MouseIdle
         private void NudInteral_ValueChange(object sender, EventArgs e)
         {
             timeCounter = (int)nudInterval.Value;
+        }
+
+        private void StartupCheck()
+        {
+            if (Properties.Setting.Default.IsAutoStart)
+            {
+                isStopped = false;
+                timer.Start();
+                SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
+                btnRun.Text = "Stop";
+            }
+            if (Properties.Setting.Default.IsMinimize)
+            {
+                this.Load += (sender, e) => { this.WindowState = FormWindowState.Minimized; this.Hide(); this.ShowInTaskbar = false; };
+            }
         }
 
         #endregion
@@ -159,6 +195,16 @@ namespace MouseIdle
             ShowFormWindow();
         }
 
+        private void autoRunMenuItem_Click(object? sender, EventArgs e)
+        {
+            autoRunMenuItem.Checked = !autoRunMenuItem.Checked;
+        }
+
+        private void minimizeMenuItem_Click(object? sender, EventArgs e)
+        {
+            minimizeMenuItem.Checked = !minimizeMenuItem.Checked;
+        }
+
         private void ExitMenuItem_Click(object? sender, EventArgs e)
         {
             ExitApp();
@@ -171,13 +217,26 @@ namespace MouseIdle
             if (this.WindowState == FormWindowState.Minimized)
             {
                 this.Hide();
-                notifyIcon.ShowBalloonTip(1000, "Mouse Idle", "Application minimized to tray.", ToolTipIcon.Info);
+                this.ShowInTaskbar = false;
             }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             SetThreadExecutionState(ES_CONTINUOUS);
+            Properties.Setting.Default.Interval = timeCounter;
+            Properties.Setting.Default.IsRandom = rbMoveRandom.Checked;
+            Properties.Setting.Default.IsAutoStart = autoRunMenuItem.Checked;
+            Properties.Setting.Default.IsMinimize = minimizeMenuItem.Checked;
+            Properties.Setting.Default.Save();
+            try
+            {
+                File.Delete(filePath);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error creating config file: " + ex.Message);
+            }
             notifyIcon.Dispose();
             base.OnFormClosing(e);
         }
@@ -191,6 +250,7 @@ namespace MouseIdle
         {
             this.Visible = true;
             this.WindowState = FormWindowState.Normal;
+            this.ShowInTaskbar = true;
         }
         /// <summary>
         /// Exit App
@@ -198,6 +258,19 @@ namespace MouseIdle
         private void ExitApp()
         {
             SetThreadExecutionState(ES_CONTINUOUS);
+            Properties.Setting.Default.Interval = timeCounter;
+            Properties.Setting.Default.IsRandom = rbMoveRandom.Checked;
+            Properties.Setting.Default.IsAutoStart = autoRunMenuItem.Checked;
+            Properties.Setting.Default.IsMinimize = minimizeMenuItem.Checked;
+            Properties.Setting.Default.Save();
+            try
+            {
+                File.Delete(filePath);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error creating config file: " + ex.Message);
+            }
             notifyIcon.Dispose();
             Application.Exit();
         }

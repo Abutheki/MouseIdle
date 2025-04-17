@@ -61,6 +61,15 @@ namespace MouseIdle.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPGNvbmZpZ3VyYXRpb24+Cgk8Y29uZmlnU2VjdGlvbnM+CgkJPHNlY3Rpb25Hcm91cCBuYW1lPSJ1c2VyU2V0dGluZ3MiIHR5cGU9IlN5c3RlbS5Db25maWd1cmF0aW9uLlVzZXJTZXR0aW5nc0dyb3VwLCBTeXN0ZW0sIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5Ij4KCQkJPHNlY3Rpb24gbmFtZT0iTW91c2VJZGxlLlByb3BlcnRpZXMuU2V0dGluZyIgdHlwZT0iU3lzdGVtLkNvbmZpZ3VyYXRpb24uQ2xpZW50U2V0dGluZ3NTZWN0aW9uLCBTeXN0ZW0sIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tl [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string ConfigFile {
+            get {
+                return ResourceManager.GetString("ConfigFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] TitleIcon {
